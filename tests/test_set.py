@@ -124,22 +124,22 @@ class BaseSetTest:
         self.assertEqual(len(h), 0)
         self.assertEqual(len(h2), 1)
 
-        self.assertIs('a' in h, False)
-        self.assertIs('a' in h2, True)
+        self.assertFalse('a' in h)
+        self.assertTrue('a' in h2)
 
         h3 = h2.include('b')
         self.assertIsNot(h2, h3)
         self.assertEqual(len(h), 0)
         self.assertEqual(len(h2), 1)
         self.assertEqual(len(h3), 2)
-        self.assertIs('a' in h3, True)
-        self.assertIs('b' in h3, True)
+        self.assertTrue('a' in h3)
+        self.assertTrue('b' in h3)
 
-        self.assertIs('b' in h, False)
-        self.assertIs('b' in h2, False)
+        self.assertFalse('b' in h)
+        self.assertFalse('b' in h2)
 
-        self.assertIs('a' in h, False)
-        self.assertIs('a' in h2, True)
+        self.assertFalse('a' in h)
+        self.assertTrue('a' in h2)
 
         h = h2 = h3 = None
 
@@ -148,16 +148,7 @@ class BaseSetTest:
         h1 = h.include('1')
         h2 = h1.include('1')
         self.assertIs(h1, h2)
-
-    def test_map_basics_4(self):
-        # TODO: change
-        h = self.Set()
-        h1 = h.set('key', [])
-        h2 = h1.set('key', [])
-        self.assertIsNot(h1, h2)
         self.assertEqual(len(h1), 1)
-        self.assertEqual(len(h2), 1)
-        self.assertIsNot(h1.get('key'), h2.get('key'))
 
     def test_set_collision_1(self):
         k1 = HashKey(10, 'aaa')
@@ -316,7 +307,7 @@ class BaseSetTest:
 
             for i, key in enumerate(keys_to_delete):
                 if str(key) in dm:
-                    hm = hm.delete(str(key))
+                    hm = hm.exclude(str(key))
                     dm.remove(str(key))
                 self.assertEqual(str(key) in hm, False)
                 self.assertEqual(len(d), len(h)) # Error?
@@ -325,7 +316,7 @@ class BaseSetTest:
                 if not (i % TEST_ITERS_EVERY):
                     self.assertEqual(set(h), set(d))
                     self.assertEqual(len(h), len(d))
-                    self.assertEqual(set(dm), len(dm))
+                    self.assertEqual(set(dm), set(hm))
                     self.assertEqual(len(dm), len(hm))
 
             self.assertEqual(len(d), 0)
@@ -630,7 +621,7 @@ class BaseSetTest:
         E = HashKey(100100, 'E')
         F = HashKey(110, 'F')
 
-        h = self.Map()
+        h = self.Set()
         h = h.include(A)
         h = h.include(B)
         h = h.include(C)
@@ -695,11 +686,11 @@ class BaseSetTest:
         self.assertFalse(h1 == h2)
         self.assertTrue(h1 != h2)
 
-        h2 = h2.include(E)
+        h1 = h1.include(E)
         self.assertFalse(h1 == h2)
         self.assertTrue(h1 != h2)
 
-        h1.exclude(D)
+        h1 = h1.exclude(D)
         self.assertTrue(h1 == h2)
         self.assertFalse(h1 != h2)
 
@@ -710,7 +701,7 @@ class BaseSetTest:
         h1 = self.Set()
         h1 = h1.include(A)
 
-        h2 = self.Map()
+        h2 = self.Set()
         h2 = h2.include(Er)
 
         with self.assertRaisesRegex(ValueError, 'cannot compare'):
@@ -726,7 +717,7 @@ class BaseSetTest:
         A = HashKey(100, 'A')
 
         h = self.Set()
-        h = h.add(0)  # empty Map node is memoized in _map.c
+        h = h.include(0)  # empty Map node is memoized in _map.c
         ref = weakref.ref(h)
 
         a = []
@@ -815,13 +806,13 @@ class BaseSetTest:
             def __repr__(self):
                 return repr(self.val)
 
-        h = self.Se()
+        h = self.Set()
         k = Key()
         h = h.include(k)
         k.val = h
 
         self.assertTrue(repr(h).startswith(
-            '<immutables.Set({{...}: 1}) at 0x'))
+            '<immutables.Set({{...}}) at 0x'))
 
     def test_hash_1(self):
         h = self.Set()
@@ -833,7 +824,7 @@ class BaseSetTest:
         self.assertEqual(hash(h), hash(h))
 
         self.assertEqual(
-            hash(h.inlcude(1).include('a')),
+            hash(h.include(1).include('a')),
             hash(h.include('a').include(1)))
 
     def test_hash_2(self):
@@ -1059,7 +1050,7 @@ class BaseSetTest:
         mm.exclude('b')
         self.assertFalse('b' in mm)
         mm.exclude('a')
-        self.assertEqual(mm.finish(), self.Map())
+        self.assertEqual(mm.finish(), self.Set())
 
     def test_set_mut_12(self):
         m = self.Set({'a', 'b'})
@@ -1131,7 +1122,7 @@ class BaseSetTest:
         m = self.Set('a')
         with m.mutate() as mm:
             with self.assertRaisesRegex(
-                    TypeError, 'cannot create Sets from MapMutations'):
+                    TypeError, 'cannot create Sets from SetMutations'):
                 self.Set(mm)
 
     def test_set_mut_18(self):

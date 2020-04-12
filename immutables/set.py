@@ -87,7 +87,7 @@ class BitmapNode:
             existing_key_hash = set_hash(key_or_node)
             if existing_key_hash == hash:
                 sub_node = CollisionNode(
-                    4, hash, [key_or_node, key], mutid)
+                    2, hash, [key_or_node, key], mutid)
             else:
                 sub_node = BitmapNode(0, 0, [], mutid)
                 sub_node, _ = sub_node.add(
@@ -219,6 +219,7 @@ class BitmapNode:
 class CollisionNode:
 
     def __init__(self, size, hash, array, mutid):
+        assert size == len(array)
         self.size = size
         self.hash = hash
         self.array = array
